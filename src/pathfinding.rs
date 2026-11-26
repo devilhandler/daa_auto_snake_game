@@ -144,7 +144,12 @@ pub fn manhattan(a: Pos, b: Pos) -> i32 {
     (a.0 - b.0).abs() + (a.1 - b.1).abs()
 }
 
+/// Telusuri `came_from` mundur dari goal ke start. Jalur tidak memuat start;
+/// jika start == goal, jalurnya kosong (tidak perlu bergerak).
 fn reconstruct(came_from: &HashMap<Pos, Pos>, start: Pos, goal: Pos) -> Vec<Pos> {
+    if start == goal {
+        return Vec::new();
+    }
     let mut path = vec![goal];
     let mut cur = goal;
     while let Some(&prev) = came_from.get(&cur) {
@@ -224,5 +229,51 @@ mod tests {
         assert!(g.bfs((1, 1), (5, 5)).path.is_none());
         assert!(g.astar((1, 1), (5, 5)).path.is_none());
         assert_eq!(g.reachable_area((1, 1)), 1);
+    }
+
+    #[test]
+    fn source_equals_target_gives_empty_path() {
+        let blocked = HashSet::new();
+        let g = grid(&blocked);
+        for algo in [Algorithm::Bfs, Algorithm::AStar] {
+            let r = g.search(algo, (3, 3), (3, 3));
+            assert_eq!(r.path, Some(vec![]));
+            assert_eq!(r.expanded, 1);
+        }
+    }
+
+    #[test]
+    fn large_grid_300x300() {
+        let blocked = HashSet::new();
+        let g = Grid { width: 300, height: 300, blocked: &blocked };
+        // dari pojok (1,1) ke pojok (298,298): 297 + 297 langkah
+        for algo in [Algorithm::Bfs, Algorithm::AStar] {
+            let r = g.search(algo, (1, 1), (298, 298));
+            assert_eq!(r.path.unwrap().len(), 594);
+        }
+    }
+
+    #[test]
+    fn bfs_and_astar_agree_on_random_obstacles() {
+        let mut seed: u64 = 7;
+        let mut rnd = |n: u64| {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            (seed >> 33) % n
+        };
+        for _ in 0..200 {
+            let blocked: HashSet<Pos> = (1..19)
+                .flat_map(|y| (1..19).map(move |x| (x, y)))
+                .filter(|_| rnd(100) < 25)
+                .collect();
+            let g = Grid { width: 20, height: 20, blocked: &blocked };
+            let (s, t) = ((1, 1), (18, 18));
+            if !g.passable(s) || !g.passable(t) {
+                continue;
+            }
+            let b = g.bfs(s, t);
+            let a = g.astar(s, t);
+            assert_eq!(b.path.as_ref().map(|p| p.len()), a.path.as_ref().map(|p| p.len()));
+            assert!(a.expanded <= b.expanded);
+        }
     }
 }
