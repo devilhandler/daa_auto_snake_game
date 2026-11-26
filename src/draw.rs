@@ -1,7 +1,9 @@
 use piston_window::{rectangle, Context, G2d};
 use piston_window::types::Color;
 
-const BLOCK_SIZE: f64 = 25.0;
+// Ukuran satu sel dalam koordinat "dunia" game. Ukuran tampilan sebenarnya
+// diskalakan di main.rs agar seluruh papan selalu muat di jendela.
+pub const BLOCK_SIZE: f64 = 20.0;
 
 
 pub fn to_coord(game_coord: i32) -> f64 {
@@ -39,4 +41,4 @@ pub fn draw_rectangle(color: Color, x: i32, y: i32, width: i32, height: i32, con
         con.transform,
         g
     );
-}
+}

@@ -1,5 +1,4 @@
 use std::collections::LinkedList;
-use piston_window::Key::P;
 use piston_window::{Context, G2d};
 use piston_window::types::Color;
 
@@ -105,6 +104,11 @@ impl Snake {
         self.tail = Some(removed_block);
     }
 
+    /// Posisi seluruh tubuh, dimulai dari kepala sampai ekor.
+    pub fn body_positions(&self) -> Vec<(i32, i32)> {
+        self.body.iter().map(|b| (b.x, b.y)).collect()
+    }
+
     pub fn head_direction(&self) -> Direction {
         self.direction
     }
@@ -145,4 +149,4 @@ impl Snake {
         }
         return false;
     }
-}
+}
